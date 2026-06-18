@@ -5,7 +5,7 @@ import streamlit as st
 st.set_page_config(page_title="숫자 야구 게임", page_icon="⚾")
 st.title("⚾ 숫자 야구 게임")
 
-# 2. 최고 기록 및 게임 상태 세션 초기화 (Streamlit은 새로고침되면 변수가 리셋되므로 session_state 사용)
+# 2. 최고 기록 및 게임 상태 세션 초기화
 if 'best_score' not in st.session_state:
     st.session_state.best_score = float('inf')
 
@@ -77,4 +77,33 @@ if submit_button and not st.session_state.game_over:
         for i in range(3):
             if guess_list[i] == answer[i]:
                 strike += 1
-            elif guess_list[i] in
+            elif guess_list[i] in answer:  # 👈 에러가 났던 이 부분을 올바르게 수정했습니다!
+                ball += 1
+                
+        # 결과 기록 저장
+        if strike == 0 and ball == 0:
+            result_text = "OUT!"
+        else:
+            result_text = f"{strike} 스트라이크 | {ball} 볼"
+            
+        st.session_state.history.append(f"[{st.session_state.attempts}회차] {guess} ➡️ {result_text}")
+        
+        # 승리 조건
+        if strike == 3:
+            st.balloons()
+            st.success(f"🎊 홈런!!! {st.session_state.attempts}번 만에 맞추셨습니다!")
+            st.session_state.game_over = True
+            if st.session_state.attempts < st.session_state.best_score:
+                st.session_state.best_score = st.session_state.attempts
+                st.rerun()
+                
+        # 패배 조건
+        elif st.session_state.attempts >= max_attempts:
+            st.error(f"☠️ 패배! 기회를 모두 소진했습니다. 정답은 {answer}였습니다.")
+            st.session_state.game_over = True
+
+# 6. 진행 상황 출력
+if st.session_state.history:
+    st.write("### 📊 입력 기록")
+    for log in reversed(st.session_state.history): # 최신 기록이 위로 오도록 함
+        st.text(log)
